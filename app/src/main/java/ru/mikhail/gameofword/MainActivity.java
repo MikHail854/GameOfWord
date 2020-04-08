@@ -76,13 +76,9 @@ public class MainActivity extends AppCompatActivity {
     //}
 
     // Метод для открытия файла
-    //private void openFile(String fileName) {
-    private StringBuilder openFile(String fileName) {
+    private void openFile(String fileName) {
 
-        StringBuilder buf = null;
         try {
-            buf = new StringBuilder();
-            //InputStream json = getAssets().open("note.txt");
             InputStream json = getAssets().open(fileName);
             BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
             String str;
@@ -96,27 +92,50 @@ public class MainActivity extends AppCompatActivity {
              */
             int flag = 0;
 
+
             while ((str = in.readLine()) != null) {
                 if (str.equalsIgnoreCase(String.valueOf(editText.getText()))) {
-                    if (!usedWord()) {
-                        textViewUSER.append(editText.getText() + "\n");
-                        textViewPC.append("Такое слово уже использовалось.\n" +
-                                "Введите другое слово.\n");
-                        flag = 1;
+                    if (!textViewUSER.getText().toString().isEmpty()) {
+                        String lastWord = usedWord.get(usedWord.size() - 1).toString();
+                        char lastCharWord = lastWord.charAt(lastWord.length() - 1);
+
+                        if (lastCharWord == 'ь' || lastCharWord == 'ъ') {
+                            lastCharWord = lastWord.charAt(lastWord.length() - 2);
+                        }
+
+                        if (editText.getText().charAt(0) == lastCharWord) {
+                            if (!usedWord()) {
+                                textViewUSER.append(editText.getText() + "\n");
+                                textViewPC.append("Такое слово уже использовалось.\n" +
+                                        "Введите другое слово.\n");
+                                flag = 1;
+                            } else {
+                                textViewUSER.append(editText.getText() + "\n");
+                                usedWord.add(editText.getText().toString());
+                                flag = 2;
+                            }
+                        } else {
+                            textViewUSER.append(editText.getText() + "\n");
+                            textViewPC.append("Вы ошиблись.\n" +
+                                    "Слово должно начинаться на букву '"
+                                    + lastCharWord + "'\n");
+                            flag = 1;
+                        }
                     } else {
-                        textViewUSER.append(editText.getText() + "\n");
-                        usedWord.add(editText.getText().toString());
-                        flag = 2;
+                        if (!usedWord()) {
+                            textViewUSER.append(editText.getText() + "\n");
+                            textViewPC.append("Такое слово уже использовалось.\n" +
+                                    "Введите другое слово.\n");
+                            flag = 1;
+                        } else {
+                            textViewUSER.append(editText.getText() + "\n");
+                            usedWord.add(editText.getText().toString());
+                            flag = 2;
+                        }
                     }
-                    //flag = true;
                 }
-                buf.append(str);
-                buf.append('\n');
             }
-
             in.close();
-
-            //if (flag == false) {
             if (flag == 0) {
                 textViewUSER.append(editText.getText() + "\n");
                 textViewPC.append("Лууузер! Вот Вы неграмотный пользователь. Нет такого слова.\n" +
@@ -126,31 +145,10 @@ public class MainActivity extends AppCompatActivity {
                 answerPC();
             }
             editText.setText("");
-            //textViewPC.setText(buf);
-
-            /*nputStream inputStream = openFileInput(fileName);
-
-            //Resources.getSystem().openRawResource(0);
-
-            if (inputStream != null) {
-
-                InputStreamReader isr = new InputStreamReader(inputStream);
-                BufferedReader reader = new BufferedReader(isr);
-                String line;
-                StringBuilder builder = new StringBuilder();
-
-                while ((line = reader.readLine()) != null) {
-                    builder.append(line + "\n");
-                }
-
-                inputStream.close();
-                textViewPC.setText(builder.toString());
-            }*/
-        } catch (Throwable t) {
+        } catch (Throwable t){
             Toast.makeText(getApplicationContext(),
                     "Exception: " + t.toString(), Toast.LENGTH_LONG).show();
         }
-        return buf;
 
     }
 
@@ -162,11 +160,15 @@ public class MainActivity extends AppCompatActivity {
             InputStream json = getAssets().open(FILENAME);
             BufferedReader in = new BufferedReader(new InputStreamReader(json, "UTF-8"));
 
-
             String str;
             boolean flag = true;
             while ((str = in.readLine()) != null) {
+
                 int lastChar = editText.getText().length() - 1;
+
+                if (editText.getText().charAt(lastChar) == 'ь' || editText.getText().charAt(lastChar) == 'ъ') {
+                    lastChar = editText.getText().length() - 2;
+                }
 
                 if (str.charAt(0) == editText.getText().charAt(lastChar)) {
                     for (int i = 0; i < usedWord.size(); i++) {
@@ -182,7 +184,6 @@ public class MainActivity extends AppCompatActivity {
 
             if (charList.size() == 0) {
                 textViewPC.append("Поздравляю! Вы выигарли.\n");
-
             } else {
                 String randomWord;
                 randomWord = (String) charList.get(0 + (int) (Math.random() * charList.size()));
@@ -197,7 +198,6 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Error IO Word", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
-
     }
 
     private Boolean usedWord() {
